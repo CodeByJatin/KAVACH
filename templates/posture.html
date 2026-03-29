@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAVACH - Posture of PQC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="min-h-screen flex" style="background-color: #f8fafc;">
+    <aside class="w-64 min-h-screen flex flex-col" style="background-color: #1e293b;">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold text-white">KAVACH</h1>
+            <p class="text-sm text-gray-400 mt-1">Quantum Security Monitor</p>
+        </div>
+        <div class="border-t border-gray-700 my-2"></div>
+        <nav class="flex-1 px-4 py-2 space-y-1">
+            <a href="/" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">🏠 Home</a>
+            <a href="/add-domain" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">➕ Add Domain</a>
+            <a href="/discovery" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">🔍 Discovery</a>
+            <a href="/cbom" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">📋 CBOM</a>
+            <a href="/posture" class="block px-4 py-2 rounded text-white bg-gray-700">🛡️ Posture</a>
+        </nav>
+        <div class="border-t border-gray-700 my-2"></div>
+        <div class="px-4 py-2">
+            <p class="text-xs text-gray-500 uppercase mb-2 px-4">My Domains</p>
+            <div id="domains-list" class="max-h-48 overflow-y-auto mb-3"></div>
+        </div>
+        <div class="p-4 mt-auto">
+            <form action="/logout" method="POST">
+                <button type="submit" class="w-full px-4 py-2 rounded text-gray-300 hover:bg-gray-700 text-left">Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col">
+        <header class="h-16 flex items-center justify-between px-8 bg-white border-b border-gray-200">
+            <div>
+                <h2 class="text-xl font-semibold" style="color: #1e293b;">Posture of PQC</h2>
+                <p id="viewing-label" class="text-sm text-gray-500">Viewing: All Domains</p>
+            </div>
+            <span class="text-gray-600">Welcome, <strong>{{ username }}</strong></span>
+        </header>
+        
+        <div class="px-8 py-4 flex gap-4" style="background-color: #1e293b;">
+            <div class="flex-1 bg-green-500 rounded-lg p-4 text-center">
+                <p class="text-white text-sm font-medium">Elite-PQC Ready</p>
+                <p id="elite-pct" class="text-white text-2xl font-bold">0%</p>
+            </div>
+            <div class="flex-1 bg-yellow-500 rounded-lg p-4 text-center">
+                <p class="text-white text-sm font-medium">Standard</p>
+                <p id="standard-pct" class="text-white text-2xl font-bold">0%</p>
+            </div>
+            <div class="flex-1 bg-orange-500 rounded-lg p-4 text-center">
+                <p class="text-white text-sm font-medium">Legacy</p>
+                <p id="legacy-pct" class="text-white text-2xl font-bold">0%</p>
+            </div>
+            <div class="flex-1 bg-red-500 rounded-lg p-4 text-center">
+                <p class="text-white text-sm font-medium">Critical Apps</p>
+                <p id="critical-count" class="text-white text-2xl font-bold">0</p>
+            </div>
+        </div>
+        
+        <main class="flex-1 p-8 overflow-auto">
+            <div id="no-data" class="hidden text-center py-16">
+                <div class="max-w-md mx-auto">
+                    <div class="text-6xl mb-4">🛡️</div>
+                    <h3 class="text-xl font-semibold mb-2" style="color: #1e293b;">No scan data available</h3>
+                    <p class="text-gray-500 mb-6">Scan some domains first to view PQC posture.</p>
+                    <a href="/add-domain" class="inline-block px-6 py-3 rounded text-white font-medium" style="background-color: #1e293b;">
+                        Add Domain
+                    </a>
+                </div>
+            </div>
+
+            <div id="posture-content" class="flex gap-6">
+                <div class="flex-1">
+                    <section class="mb-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4" style="color: #1e293b;">Assets by Classification</h3>
+                                <canvas id="classification-chart"></canvas>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4" style="color: #1e293b;">Application Status</h3>
+                                <canvas id="status-chart"></canvas>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6">
+                                <h3 class="text-lg font-semibold mb-4" style="color: #1e293b;">Risk Overview Matrix</h3>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="aspect-square bg-green-300 rounded flex items-center justify-center text-xs font-medium">Low</div>
+                                    <div class="aspect-square bg-green-400 rounded flex items-center justify-center text-xs font-medium">Low-Med</div>
+                                    <div class="aspect-square bg-yellow-400 rounded flex items-center justify-center text-xs font-medium">Medium</div>
+                                    <div class="aspect-square bg-yellow-500 rounded flex items-center justify-center text-xs font-medium">Med-High</div>
+                                    <div class="aspect-square bg-orange-400 rounded flex items-center justify-center text-xs font-medium">High</div>
+                                    <div class="aspect-square bg-orange-500 rounded flex items-center justify-center text-xs font-medium">High-Crit</div>
+                                    <div class="aspect-square bg-red-400 rounded flex items-center justify-center text-xs font-medium">Crit-High</div>
+                                    <div class="aspect-square bg-red-500 rounded flex items-center justify-center text-xs font-medium">Crit</div>
+                                    <div class="aspect-square bg-red-700 rounded flex items-center justify-center text-xs font-medium text-white">Critical</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="mb-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4" style="color: #1e293b;">Assets</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead>
+                                        <tr class="border-b border-gray-200">
+                                            <th class="py-3 px-4 text-sm font-medium text-gray-600">Asset Name</th>
+                                            <th class="py-3 px-4 text-sm font-medium text-gray-600">PQC Support</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="assets-table"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold mb-4" style="color: #1e293b;">Improvement Recommendations</h3>
+                            <div id="recommendations-list" class="space-y-3"></div>
+                        </div>
+                    </section>
+                </div>
+
+                <div id="detail-panel" class="hidden w-80 bg-white rounded-lg shadow p-6 h-fit sticky top-4">
+                    <h3 class="text-lg font-semibold mb-4" style="color: #1e293b;">Asset Details</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm text-gray-500">Asset Name</p>
+                            <p id="detail-name" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Owner</p>
+                            <p id="detail-owner" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">TLS Version</p>
+                            <p id="detail-tls" class="font-medium">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Cipher Suite</p>
+                            <p id="detail-cipher" class="font-medium text-sm">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">PQC Score</p>
+                            <p id="detail-score" class="font-bold text-lg">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Status</p>
+                            <p id="detail-status" class="font-medium">-</p>
+                        </div>
+                    </div>
+                    <button onclick="closeDetailPanel()" class="mt-4 w-full py-2 rounded border border-gray-300 text-gray-700 font-medium">Close</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let classificationChart, statusChart;
+        let activeDomainId = localStorage.getItem('active_domain_id') || '';
+        let allAssets = [];
+
+        async function loadDomains() {
+            try {
+                const response = await fetch('/api/my-domains');
+                const domains = await response.json();
+                const list = document.getElementById('domains-list');
+                list.innerHTML = `
+                    <a href="/" 
+                       class="block px-4 py-2 rounded text-sm text-gray-300 hover:bg-gray-700 hover:text-white mb-1">
+                        ★ All Domains
+                    </a>
+                ` + domains.map(d => `
+                    <a href="#" onclick="selectDomain('${d.id}', '${d.domain_name}'); return false;"
+                       class="block px-4 py-2 rounded text-sm text-gray-300 hover:bg-gray-700 hover:text-white mb-1 ${d.id == activeDomainId ? 'bg-gray-700 text-white' : ''}">
+                        ● ${d.domain_name}
+                    </a>
+                `).join('') || '<p class="px-4 text-gray-500 text-sm">No domains yet</p>';
+            } catch (error) {
+                console.error('Error loading domains:', error);
+            }
+        }
+
+        function selectDomain(domainId, domainName) {
+            localStorage.setItem('active_domain_id', domainId);
+            localStorage.setItem('active_domain_name', domainName);
+            activeDomainId = domainId;
+            document.getElementById('viewing-label').textContent = 'Viewing: ' + domainName;
+            loadPostureData();
+            loadDomains();
+        }
+
+        async function loadPostureData() {
+            try {
+                let url = '/api/posture';
+                if (activeDomainId && activeDomainId !== 'all') {
+                    url = '/api/posture/' + activeDomainId;
+                }
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data.assets || data.assets.length === 0) {
+                    document.getElementById('no-data').classList.remove('hidden');
+                    document.getElementById('posture-content').classList.add('hidden');
+                    return;
+                }
+
+                document.getElementById('no-data').classList.add('hidden');
+                document.getElementById('posture-content').classList.remove('hidden');
+
+                allAssets = data.assets;
+                renderStats(data);
+                renderClassificationChart(data);
+                renderStatusChart(data);
+                renderAssetsTable(data.assets);
+                renderRecommendations(data.recommendations);
+            } catch (error) {
+                console.error('Error loading posture data:', error);
+            }
+        }
+
+        function renderStats(data) {
+            document.getElementById('elite-pct').textContent = data.elite_pct + '%';
+            document.getElementById('standard-pct').textContent = data.standard_pct + '%';
+            document.getElementById('legacy-pct').textContent = data.legacy_pct + '%';
+            document.getElementById('critical-count').textContent = data.critical_count;
+        }
+
+        function renderClassificationChart(data) {
+            const ctx = document.getElementById('classification-chart').getContext('2d');
+            if (classificationChart) classificationChart.destroy();
+
+            classificationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Elite-PQC', 'Standard', 'Legacy', 'Critical'],
+                    datasets: [{
+                        label: 'Assets',
+                        data: [data.elite_count, data.standard_count, data.legacy_count, data.critical_count],
+                        backgroundColor: ['#22c55e', '#eab308', '#f97316', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderStatusChart(data) {
+            const ctx = document.getElementById('status-chart').getContext('2d');
+            if (statusChart) statusChart.destroy();
+
+            statusChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Elite-PQC', 'Standard', 'Legacy', 'Critical'],
+                    datasets: [{
+                        data: [data.elite_count, data.standard_count, data.legacy_count, data.critical_count],
+                        backgroundColor: ['#22c55e', '#eab308', '#f97316', '#ef4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function renderAssetsTable(assets) {
+            const tbody = document.getElementById('assets-table');
+            tbody.innerHTML = assets.map(a => {
+                const isGood = a.pqc_status === 'Elite-PQC' || a.pqc_status === 'Standard';
+                const icon = isGood 
+                    ? '<span class="text-green-500 text-xl">✓</span>'
+                    : '<span class="text-red-500 text-xl">✗</span>';
+                const rowClass = isGood ? 'hover:bg-gray-50' : 'bg-red-50 hover:bg-red-100';
+                
+                return `
+                    <tr class="border-b border-gray-100 ${rowClass} cursor-pointer" onclick="showAssetDetail('${a.subdomain}')">
+                        <td class="py-3 px-4">${a.subdomain || '-'}</td>
+                        <td class="py-3 px-4">${icon}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showAssetDetail(subdomain) {
+            const asset = allAssets.find(a => a.subdomain === subdomain);
+            if (!asset) return;
+
+            document.getElementById('detail-panel').classList.remove('hidden');
+            document.getElementById('detail-name').textContent = asset.subdomain || '-';
+            document.getElementById('detail-owner').textContent = asset.domain_name || '-';
+            document.getElementById('detail-tls').textContent = asset.tls_version || '-';
+            document.getElementById('detail-cipher').textContent = asset.cipher_suite || '-';
+            
+            const score = asset.pqc_score || 0;
+            const scoreEl = document.getElementById('detail-score');
+            scoreEl.textContent = score;
+            scoreEl.className = 'font-bold text-lg';
+            if (score >= 700) scoreEl.style.color = '#22c55e';
+            else if (score >= 400) scoreEl.style.color = '#eab308';
+            else if (score >= 200) scoreEl.style.color = '#f97316';
+            else scoreEl.style.color = '#ef4444';
+
+            const statusEl = document.getElementById('detail-status');
+            statusEl.textContent = asset.pqc_status || '-';
+            statusEl.className = 'font-medium';
+            if (asset.pqc_status === 'Elite-PQC') statusEl.classList.add('text-green-600');
+            else if (asset.pqc_status === 'Standard') statusEl.classList.add('text-yellow-600');
+            else if (asset.pqc_status === 'Legacy') statusEl.classList.add('text-orange-600');
+            else if (asset.pqc_status === 'Critical') statusEl.classList.add('text-red-600');
+        }
+
+        function closeDetailPanel() {
+            document.getElementById('detail-panel').classList.add('hidden');
+        }
+
+        function renderRecommendations(recommendations) {
+            const list = document.getElementById('recommendations-list');
+            if (!recommendations || recommendations.length === 0) {
+                list.innerHTML = '<p class="text-gray-500">No recommendations available.</p>';
+                return;
+            }
+
+            list.innerHTML = recommendations.map(rec => `
+                <div class="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <span class="text-yellow-500 text-xl">⚠️</span>
+                    <p class="text-gray-700">${rec}</p>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (activeDomainId && activeDomainId !== 'all') {
+                document.getElementById('viewing-label').textContent = 
+                    'Viewing: ' + (localStorage.getItem('active_domain_name') || 'Selected Domain');
+            }
+            loadDomains();
+            loadPostureData();
+        });
+    </script>
+</body>
+</html>

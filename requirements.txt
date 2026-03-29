@@ -1,0 +1,7 @@
+flask
+flask-cors
+requests
+sslyze
+cryptography
+reportlab
+werkzeug

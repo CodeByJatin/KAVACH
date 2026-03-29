@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAVACH - Reporting</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex" style="background-color: #f8fafc;">
+    <aside class="w-64 min-h-screen flex flex-col" style="background-color: #1e293b;">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold text-white">KAVACH</h1>
+            <p class="text-sm text-gray-400 mt-1">Quantum Security Monitor</p>
+        </div>
+        <div class="border-t border-gray-700 my-2"></div>
+        <nav class="flex-1 px-4 py-2 space-y-1">
+            <a href="/" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">🏠 Home</a>
+            <a href="/add-domain" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">➕ Add Domain</a>
+            <a href="/discovery" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">🔍 Discovery</a>
+            <a href="/cbom" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">📋 CBOM</a>
+            <a href="/posture" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">🛡️ Posture</a>
+            <a href="/rating" class="block px-4 py-2 rounded text-gray-300 hover:bg-gray-700 hover:text-white">⭐ Rating</a>
+            <a href="/reporting" class="block px-4 py-2 rounded text-white bg-gray-700">📊 Reporting</a>
+        </nav>
+        <div class="border-t border-gray-700 my-2"></div>
+        <div class="px-4 py-2">
+            <p class="text-xs text-gray-500 uppercase mb-2 px-4">My Domains</p>
+            <div id="domains-list" class="max-h-48 overflow-y-auto mb-3"></div>
+        </div>
+        <div class="p-4 mt-auto">
+            <form action="/logout" method="POST">
+                <button type="submit" class="w-full px-4 py-2 rounded text-gray-300 hover:bg-gray-700 text-left">Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col">
+        <header class="h-16 flex items-center justify-between px-8 bg-white border-b border-gray-200">
+            <div>
+                <h2 class="text-xl font-semibold" style="color: #1e293b;">Reporting</h2>
+                <p class="text-sm text-gray-500">Generate and schedule security reports</p>
+            </div>
+            <span class="text-gray-600">Welcome, <strong>{{ username }}</strong></span>
+        </header>
+        
+        <main class="flex-1 p-8 overflow-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-lg p-6" style="border-top: 4px solid #3b82f6;">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: #dbeafe;">
+                            📊
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold" style="color: #1e293b;">Executive Reporting</h3>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-4">High level summary for management. Includes key metrics, risk overview, and recommendations.</p>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Domain</label>
+                        <select id="exec-domain" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+                            <option value="">All Domains</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="generateExecutiveReport()" class="w-full py-2 px-4 rounded text-white font-medium" style="background-color: #3b82f6;">
+                        Generate Executive Report
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6" style="border-top: 4px solid #22c55e;">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: #dcfce7;">
+                            ⏰
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold" style="color: #1e293b;">Scheduled Reporting</h3>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-4">Automate reports to be sent periodically to your email.</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                            <select id="schedule-type" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-green-500">
+                                <option value="full">Full Report</option>
+                                <option value="discovery">Discovery Only</option>
+                                <option value="cbom">CBOM Only</option>
+                                <option value="posture">PQC Posture Only</option>
+                                <option value="rating">Cyber Rating Only</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Frequency</label>
+                            <select id="schedule-frequency" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-green-500">
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input type="email" id="schedule-email" placeholder="security@company.com" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-green-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Include Sections</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="include-discovery" checked class="w-4 h-4 rounded">
+                                    <span class="text-sm text-gray-600">Asset Discovery</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="include-cbom" checked class="w-4 h-4 rounded">
+                                    <span class="text-sm text-gray-600">CBOM</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="include-posture" checked class="w-4 h-4 rounded">
+                                    <span class="text-sm text-gray-600">PQC Posture</span>
+                                </label>
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="include-rating" checked class="w-4 h-4 rounded">
+                                    <span class="text-sm text-gray-600">Cyber Rating</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="scheduleReport()" class="w-full mt-4 py-2 px-4 rounded text-white font-medium" style="background-color: #22c55e;">
+                        Schedule Report
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6" style="border-top: 4px solid #f97316;">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-2xl" style="background-color: #ffedd5;">
+                            📄
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold" style="color: #1e293b;">On-Demand Reporting</h3>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 text-sm mb-4">Generate specific reports on demand for immediate download.</p>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Domain</label>
+                        <select id="ondemand-domain" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                            <option value="">All Domains</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                        <select id="ondemand-type" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-orange-500">
+                            <option value="full">Full Report</option>
+                            <option value="discovery">Discovery Only</option>
+                            <option value="cbom">CBOM Only</option>
+                            <option value="posture">PQC Posture Only</option>
+                            <option value="rating">Cyber Rating Only</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="generateOnDemandReport()" class="w-full py-2 px-4 rounded text-white font-medium" style="background-color: #f97316;">
+                        Generate Report
+                    </button>
+                </div>
+            </div>
+
+            <div id="success-message" class="hidden fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+                <span class="text-xl">✓</span>
+                <span id="success-text">Report scheduled successfully</span>
+            </div>
+
+            <div id="error-message" class="hidden fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+                <span class="text-xl">✗</span>
+                <span id="error-text">An error occurred</span>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let activeDomainId = localStorage.getItem('active_domain_id') || '';
+
+        async function loadDomains() {
+            try {
+                const response = await fetch('/api/my-domains');
+                const domains = await response.json();
+                
+                const execSelect = document.getElementById('exec-domain');
+                const ondemandSelect = document.getElementById('ondemand-domain');
+                
+                const domainOptions = domains.map(d => 
+                    `<option value="${d.id}">${d.domain_name}</option>`
+                ).join('');
+                
+                execSelect.innerHTML = '<option value="">All Domains</option>' + domainOptions;
+                ondemandSelect.innerHTML = '<option value="">All Domains</option>' + domainOptions;
+                
+                const list = document.getElementById('domains-list');
+                list.innerHTML = `
+                    <a href="/" 
+                       class="block px-4 py-2 rounded text-sm text-gray-300 hover:bg-gray-700 hover:text-white mb-1">
+                        ★ All Domains
+                    </a>
+                ` + domains.map(d => `
+                    <a href="#" onclick="selectDomain('${d.id}', '${d.domain_name}'); return false;"
+                       class="block px-4 py-2 rounded text-sm text-gray-300 hover:bg-gray-700 hover:text-white mb-1 ${d.id == activeDomainId ? 'bg-gray-700 text-white' : ''}">
+                        ● ${d.domain_name}
+                    </a>
+                `).join('') || '<p class="px-4 text-gray-500 text-sm">No domains yet</p>';
+            } catch (error) {
+                console.error('Error loading domains:', error);
+            }
+        }
+
+        function selectDomain(domainId, domainName) {
+            localStorage.setItem('active_domain_id', domainId);
+            localStorage.setItem('active_domain_name', domainName);
+            loadDomains();
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('success-message');
+            document.getElementById('success-text').textContent = message;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+
+        function showError(message) {
+            const el = document.getElementById('error-message');
+            document.getElementById('error-text').textContent = message;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 3000);
+        }
+
+        async function generateExecutiveReport() {
+            const domainId = document.getElementById('exec-domain').value;
+            
+            if (!domainId) {
+                showError('Please select a domain first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/report/${domainId}?type=executive`);
+                const data = await response.json();
+                
+                const reportContent = generateReportText(data, 'Executive Report');
+                downloadTextAsFile(reportContent, `executive-report-${data.domain}.txt`);
+                showSuccess('Executive report generated successfully');
+            } catch (error) {
+                showError('Error generating report: ' + error.message);
+            }
+        }
+
+        function scheduleReport() {
+            const email = document.getElementById('schedule-email').value;
+            const type = document.getElementById('schedule-type').value;
+            const frequency = document.getElementById('schedule-frequency').value;
+            
+            if (!email) {
+                showError('Please enter an email address');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                showError('Please enter a valid email address');
+                return;
+            }
+            
+            showSuccess('Report scheduled successfully');
+            
+            document.getElementById('schedule-email').value = '';
+            document.getElementById('schedule-type').value = 'full';
+            document.getElementById('schedule-frequency').value = 'weekly';
+            document.getElementById('include-discovery').checked = true;
+            document.getElementById('include-cbom').checked = true;
+            document.getElementById('include-posture').checked = true;
+            document.getElementById('include-rating').checked = true;
+        }
+
+        async function generateOnDemandReport() {
+            const domainId = document.getElementById('ondemand-domain').value;
+            const type = document.getElementById('ondemand-type').value;
+            
+            if (!domainId) {
+                showError('Please select a domain first');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/report/${domainId}?type=${type}`);
+                const data = await response.json();
+                
+                const reportContent = generateReportText(data, type.toUpperCase() + ' Report');
+                downloadTextAsFile(reportContent, `${type}-report-${data.domain}.txt`);
+                showSuccess('Report generated successfully');
+            } catch (error) {
+                showError('Error generating report: ' + error.message);
+            }
+        }
+
+        function generateReportText(data, reportType) {
+            const lines = [
+                '='.repeat(60),
+                'KAVACH SECURITY REPORT',
+                reportType,
+                '='.repeat(60),
+                '',
+                `Domain: ${data.domain}`,
+                `Generated: ${new Date().toLocaleString()}`,
+                `Report Type: ${data.report_type}`,
+                '',
+                '-'.repeat(60),
+                'EXECUTIVE SUMMARY',
+                '-'.repeat(60),
+                `Total Assets Scanned: ${data.total_assets}`,
+                `Average PQC Score: ${data.avg_score}/1000`,
+                '',
+                'ASSET CLASSIFICATION:',
+                `  Elite-PQC Ready: ${data.elite}`,
+                `  Standard: ${data.standard}`,
+                `  Legacy: ${data.legacy}`,
+                `  Critical: ${data.critical}`,
+                '',
+                '-'.repeat(60),
+                'TOP VULNERABILITIES',
+                '-'.repeat(60),
+            ];
+            
+            const criticalAssets = data.assets.filter(a => a.pqc_status === 'Critical' || a.pqc_status === 'Legacy');
+            if (criticalAssets.length > 0) {
+                criticalAssets.forEach(a => {
+                    lines.push(`  - ${a.subdomain}: ${a.cipher_suite || 'Unknown cipher'} (Score: ${a.pqc_score || 0})`);
+                });
+            } else {
+                lines.push('  No critical vulnerabilities found.');
+            }
+            
+            lines.push('');
+            lines.push('-'.repeat(60));
+            lines.push('RECOMMENDATIONS');
+            lines.push('-'.repeat(60));
+            lines.push('1. Upgrade all legacy systems to TLS 1.3');
+            lines.push('2. Replace weak cipher suites with AES-GCM');
+            lines.push('3. Enable post-quantum cryptography where available');
+            lines.push('4. Schedule regular security assessments');
+            lines.push('');
+            lines.push('='.repeat(60));
+            lines.push('Report generated by KAVACH - Quantum Security Monitor');
+            lines.push('='.repeat(60));
+            
+            return lines.join('\n');
+        }
+
+        function downloadTextAsFile(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDomains();
+        });
+    </script>
+</body>
+</html>
