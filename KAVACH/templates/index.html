@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAVACH Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .sidebar { 
+            background: linear-gradient(180deg, #9f1239 0%, #4c0519 100%);
+            border-right: 1px solid rgba(255,255,255,0.1); 
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .header-bg {
+            background: linear-gradient(90deg, #9f1239 0%, #d97706 100%);
+        }
+        .nav-link.active { background-color: #facc15; color: #4c0519; border-radius: 0.5rem; font-weight: 600; }
+        .nav-link:hover:not(.active) { background-color: rgba(255,255,255,0.1); border-radius: 0.5rem; color: #fff; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 flex-shrink-0 flex flex-col transition-all duration-300 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-white/10">
+            <h1 class="text-2xl font-bold text-white">KAVACH</h1>
+        </div>
+        
+        <div class="p-4 flex-grow overflow-y-auto">
+            <!-- Domain Sector -->
+            <div class="mb-6">
+                <p class="text-xs font-semibold text-rose-200 uppercase tracking-wider mb-3">Context</p>
+                <select id="domainSelect" class="w-full bg-black/20 border border-white/20 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block p-2.5 outline-none mb-2 text-white">
+                    <option value="none">All Domains (Dashboard)</option>
+                    <!-- Populated via JS -->
+                </select>
+                <button onclick="loadPage('add_domain')" class="w-full text-sm bg-black/20 hover:bg-black/40 border border-white/20 rounded p-2 text-center transition-colors text-white">
+                    <i class="fas fa-plus mr-1"></i> Add Domain
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <ul class="space-y-1 mt-6" id="navMenu">
+                <li>
+                    <a href="#" onclick="loadPage('home'); return false;" class="nav-link active flex items-center px-3 py-2 text-sm font-medium transition-colors" data-page="home">
+                        <i class="fas fa-home w-6 text-center mr-2"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('discovery'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="discovery">
+                        <i class="fas fa-network-wired w-6 text-center mr-2"></i> Discovery
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('cbom'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="cbom">
+                        <i class="fas fa-cube w-6 text-center mr-2"></i> CBOM
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('posture'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="posture">
+                        <i class="fas fa-shield-alt w-6 text-center mr-2"></i> PQC Posture
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('rating'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="rating">
+                        <i class="fas fa-star w-6 text-center mr-2"></i> Cyber Rating
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('reporting'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="reporting">
+                        <i class="fas fa-file-pdf w-6 text-center mr-2"></i> Reporting
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- User Footer -->
+        <div class="p-4 border-t border-white/10">
+            <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold shadow-lg text-rose-900">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium" id="userNameDisplay">Loading...</p>
+                    <a href="/logout" class="text-xs text-red-400 hover:text-red-300">Sign out</a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main ContentWrapper -->
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-slate-900">
+        <!-- Top Header (Optional, mostly clean space) -->
+        <header class="h-16 flex items-center justify-between px-8 border-b border-yellow-500/30 header-bg z-10 w-full absolute top-0 text-white shadow-md">
+            <h2 id="pageTitle" class="text-xl font-semibold">Overview</h2>
+            <div class="flex items-center space-x-4">
+                <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-yellow-400 text-rose-900 shadow-sm border border-yellow-300">PQC-Ready PNB</span>
+            </div>
+        </header>
+
+        <!-- Dynamic Page Content -->
+        <div id="mainContent" class="flex-1 overflow-y-auto p-8 pt-24 scroll-smooth">
+            <!-- Partials loaded here -->
+            <div class="flex items-center justify-center h-full">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- App JS Scripts -->
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/charts.js"></script>
+</body>
+</html>

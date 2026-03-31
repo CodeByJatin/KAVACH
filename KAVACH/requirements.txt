@@ -1,0 +1,5 @@
+Flask==3.0.0
+Werkzeug==3.0.0
+sslyze==6.3.0
+requests==2.31.0
+reportlab==4.0.7

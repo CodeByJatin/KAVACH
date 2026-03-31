@@ -1,0 +1,37 @@
+<!-- CBOM Partial -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-semibold mb-2">Cryptographic Bill of Materials</h2>
+        <p class="text-slate-400 text-sm">Automated cryptographic inventory charting cipher suites, key lengths, and TLS protocol distributions.</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="glass-panel p-6 rounded-xl border border-yellow-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+        <h3 class="text-lg font-medium mb-4 text-slate-200">Cipher Suite Distribution</h3>
+        <div class="h-64 relative flex items-center justify-center w-full">
+            <canvas id="chartCiphers"></canvas>
+        </div>
+    </div>
+    
+    <div class="glass-panel p-6 rounded-xl border border-yellow-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+        <h3 class="text-lg font-medium mb-4 text-slate-200">TLS Protocol Versions</h3>
+        <div class="h-64 relative flex items-center justify-center w-full">
+            <canvas id="chartTls"></canvas>
+        </div>
+    </div>
+    
+    <div class="glass-panel p-6 rounded-xl border border-yellow-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+        <h3 class="text-lg font-medium mb-4 text-slate-200">Key Lengths</h3>
+        <div class="h-64 relative flex items-center justify-center w-full">
+            <canvas id="chartKeys"></canvas>
+        </div>
+    </div>
+    
+    <div class="glass-panel p-6 rounded-xl border border-yellow-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+        <h3 class="text-lg font-medium mb-4 text-slate-200">Certificate Authorities</h3>
+        <div class="h-64 relative flex items-center justify-center w-full">
+            <canvas id="chartCAs"></canvas>
+        </div>
+    </div>
+</div>

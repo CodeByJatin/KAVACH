@@ -1,0 +1,106 @@
+<!-- Posture Partial -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-semibold mb-2">PQC Readiness Posture</h2>
+        <p class="text-slate-400 text-sm">Granular per-asset cryptographic assessment against Post-Quantum attack vectors.</p>
+    </div>
+</div>
+
+<!-- Summary Metrics (JS Populated) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="glass-panel p-5 rounded-xl border-l-4 border-yellow-500 flex items-center shadow-lg">
+        <div class="p-3 rounded-full bg-yellow-500/20 text-yellow-400 mr-4 text-xl"><i class="fas fa-chart-line"></i></div>
+        <div><p class="text-sm text-slate-400">Average PQC Score</p><h3 class="text-2xl font-bold" id="avgPostureScore">--</h3></div>
+    </div>
+    <div class="glass-panel p-5 rounded-xl border-l-4 border-green-500 flex items-center shadow-lg">
+        <div class="p-3 rounded-full bg-green-500/20 text-green-400 mr-4 text-xl"><i class="fas fa-shield-virus"></i></div>
+        <div><p class="text-sm text-slate-400">Elite Assets</p><h3 class="text-2xl font-bold" id="elitePostureCount">--</h3></div>
+    </div>
+    <div class="glass-panel p-5 rounded-xl border-l-4 border-red-500 flex items-center shadow-lg">
+        <div class="p-3 rounded-full bg-red-500/20 text-red-400 mr-4 text-xl"><i class="fas fa-exclamation-triangle"></i></div>
+        <div><p class="text-sm text-slate-400">Critical Action Required</p><h3 class="text-2xl font-bold" id="criticalPostureCount">--</h3></div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="flex space-x-2 mb-4 overflow-x-auto pb-2" id="postureFilters">
+    <button onclick="filterPosture('all')" id="flt-all" class="px-4 py-1.5 rounded-full text-sm font-semibold text-rose-900 bg-yellow-500 shadow-sm transition-colors border border-yellow-400">All Assets</button>
+    <button onclick="filterPosture('elite')" id="flt-elite" class="px-4 py-1.5 rounded-full text-sm font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 transition-colors border border-slate-600">Elite</button>
+    <button onclick="filterPosture('standard')" id="flt-standard" class="px-4 py-1.5 rounded-full text-sm font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 transition-colors border border-slate-600">Standard</button>
+    <button onclick="filterPosture('legacy')" id="flt-legacy" class="px-4 py-1.5 rounded-full text-sm font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 transition-colors border border-slate-600">Legacy</button>
+    <button onclick="filterPosture('critical')" id="flt-critical" class="px-4 py-1.5 rounded-full text-sm font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700/50 transition-colors border border-slate-600">Critical</button>
+</div>
+
+<!-- Table -->
+<div class="glass-panel rounded-xl border border-yellow-500/20 overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+            <thead class="text-xs uppercase bg-gradient-to-r from-yellow-600 to-yellow-500 text-rose-950 font-bold">
+                <tr>
+                    <th class="px-6 py-4">Asset / Subdomain</th>
+                    <th class="px-6 py-4">TLS Version</th>
+                    <th class="px-6 py-4">Cipher Suite</th>
+                    <th class="px-4 py-4">Key Size</th>
+                    <th class="px-4 py-4 cursor-pointer hover:text-black transition" onclick="sortPostureByScore()">Score <i class="fas fa-sort ml-1"></i></th>
+                    <th class="px-6 py-4 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="postureTableBody" class="divide-y divide-slate-700/50 bg-slate-900/50">
+                <!-- JS populated -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Dialog for Deep Dive -->
+<div id="pqcModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closePQCModal()"></div>
+    <div class="relative w-full max-w-2xl glass-panel border border-yellow-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-5 border-b border-white/10 bg-gradient-to-r from-rose-950 to-slate-900">
+            <h3 class="text-xl font-bold text-white flex items-center"><i class="fas fa-search-plus text-yellow-500 mr-3"></i> Assessment Insight</h3>
+            <button onclick="closePQCModal()" class="text-slate-400 hover:text-white transition-colors text-xl">&times;</button>
+        </div>
+        <!-- Content -->
+        <div class="p-6 overflow-y-auto">
+            <div class="flex items-start justify-between mb-6">
+                <div>
+                    <h4 class="text-lg font-mono font-bold text-yellow-500" id="modalSubdomain">api.example.com</h4>
+                    <p class="text-sm text-slate-400 mt-1">Authority: <span id="modalCA" class="text-slate-300"></span></p>
+                </div>
+                <div class="text-right">
+                    <div id="modalScoreBadge" class="text-2xl font-black px-4 py-1 rounded bg-slate-800 border-2">750</div>
+                </div>
+            </div>
+            
+            <h5 class="text-xs font-bold uppercase text-slate-500 tracking-wider mb-3">Score Composition</h5>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-black/30 p-3 rounded-lg border border-slate-700/50 flex justify-between items-center">
+                    <span class="text-slate-400 text-sm"><i class="fas fa-lock mr-2"></i>TLS Protocol</span>
+                    <span class="font-bold text-white" id="modalTlsScore"></span>
+                </div>
+                <div class="bg-black/30 p-3 rounded-lg border border-slate-700/50 flex justify-between items-center">
+                    <span class="text-slate-400 text-sm"><i class="fas fa-key mr-2"></i>Cipher Strength</span>
+                    <span class="font-bold text-white" id="modalCipherScore"></span>
+                </div>
+                <div class="bg-black/30 p-3 rounded-lg border border-slate-700/50 flex justify-between items-center">
+                    <span class="text-slate-400 text-sm"><i class="fas fa-ruler-horizontal mr-2"></i>Key Length</span>
+                    <span class="font-bold text-white" id="modalKeyScore"></span>
+                </div>
+                <div class="bg-black/30 p-3 rounded-lg border border-slate-700/50 flex justify-between items-center">
+                    <span class="text-slate-400 text-sm"><i class="fas fa-atom mr-2"></i>PQC Exchange</span>
+                    <span class="font-bold text-white" id="modalPqcScore"></span>
+                </div>
+            </div>
+            
+            <div class="bg-slate-800/60 rounded-lg p-5 border border-yellow-500/20 border-l-4 border-l-yellow-500">
+                <h5 class="font-semibold text-white mb-2"><i class="fas fa-bullhorn mr-2"></i>Remediation Advisory</h5>
+                <p class="text-slate-300 text-sm leading-relaxed" id="modalRecommendation">Loading recommendation...</p>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="p-4 border-t border-white/10 bg-black/20 text-right">
+            <button onclick="closePQCModal()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded cursor-pointer transition-colors text-sm font-semibold">Done</button>
+        </div>
+    </div>
+</div>

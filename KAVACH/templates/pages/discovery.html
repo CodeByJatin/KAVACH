@@ -1,0 +1,36 @@
+<!-- Discovery Tabbed Interface -->
+<div class="mb-4">
+    <!-- Top Tabs (Rounded pills style) -->
+    <div class="flex space-x-2 bg-gradient-to-r from-rose-900 to-rose-800 p-2 rounded-full shadow-lg border border-yellow-500/30">
+        <button onclick="switchDiscoveryTab('domains')" id="tabBtn-domains" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-rose-900 bg-yellow-500 shadow-sm transition-all text-center tracking-wide">Domains <span id="countDomains">(0)</span></button>
+        <button onclick="switchDiscoveryTab('ssl')" id="tabBtn-ssl" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-white hover:bg-white/10 transition-all text-center tracking-wide">SSL <span id="countSSL">(0)</span></button>
+        <button onclick="switchDiscoveryTab('ips')" id="tabBtn-ips" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-white hover:bg-white/10 transition-all text-center tracking-wide">IP Address <span id="countIPs">(0)</span></button>
+        <button onclick="switchDiscoveryTab('software')" id="tabBtn-software" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-white hover:bg-white/10 transition-all text-center tracking-wide">Software <span id="countSoftware">(0)</span></button>
+    </div>
+</div>
+
+<div class="mb-6 ml-4">
+    <!-- Sub Tabs (Smaller pills) -->
+    <div class="flex space-x-6 border-b border-slate-700/50">
+        <button onclick="switchDiscoverySubTab('all')" id="subTabBtn-all" class="text-sm font-medium text-yellow-400 border-b-2 border-yellow-400 pb-2 px-1">All <span id="countAll">(0)</span></button>
+        <button onclick="switchDiscoverySubTab('new')" id="subTabBtn-new" class="text-sm font-medium text-slate-400 hover:text-white pb-2 px-1 border-b-2 border-transparent hover:border-slate-500">New</button>
+        <button onclick="switchDiscoverySubTab('false_positive')" id="subTabBtn-false_positive" class="text-sm font-medium text-slate-400 hover:text-white pb-2 px-1 border-b-2 border-transparent hover:border-slate-500">False Positive</button>
+        <button onclick="switchDiscoverySubTab('confirmed')" id="subTabBtn-confirmed" class="text-sm font-medium text-slate-400 hover:text-white pb-2 px-1 border-b-2 border-transparent hover:border-slate-500">Confirmed</button>
+    </div>
+</div>
+
+<div class="glass-panel rounded-xl border border-yellow-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden">
+    <div class="overflow-x-auto bg-slate-900/90">
+        <table class="w-full text-left text-sm text-slate-300">
+            <thead id="discoveryTableHeader" class="text-xs uppercase bg-gradient-to-r from-yellow-600 to-yellow-500 text-rose-950 font-bold">
+                <!-- JS populated headers -->
+                <tr>
+                    <th class="px-6 py-4">Loading...</th>
+                </tr>
+            </thead>
+            <tbody id="discoveryTableBody" class="divide-y divide-slate-700/50">
+                <!-- JS populated -->
+            </tbody>
+        </table>
+    </div>
+</div>
