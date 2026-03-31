@@ -24,6 +24,11 @@ app = Flask(__name__)
 # In production, use a secure secret key via env var
 app.secret_key = 'kavach_super_secret_key_dev'
 
+# Initialize database on startup
+# This ensures tables are created even when running with Gunicorn on Render
+with app.app_context():
+    init_db()
+
 # ---------------------------------------------------------------------------
 # DECORATORS
 # ---------------------------------------------------------------------------
@@ -774,9 +779,4 @@ def api_report(domain_id=None):
     )
 
 if __name__ == '__main__':
-    # Initialize database
-    if not os.path.exists('kavach.db'):
-        print("Database not found, initializing...")
-        init_db()
-        
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=int(os.environ.get('PORT', 5000)), host='0.0.0.0')
