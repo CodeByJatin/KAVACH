@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAVACH Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Marked.js -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .sidebar { 
+            background: linear-gradient(180deg, #9f1239 0%, #4c0519 100%);
+            border-right: 1px solid rgba(255,255,255,0.1); 
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+        .header-bg {
+            background: linear-gradient(90deg, #9f1239 0%, #d97706 100%);
+        }
+        .nav-link.active { background-color: #facc15; color: #4c0519; border-radius: 0.5rem; font-weight: 600; }
+        .nav-link:hover:not(.active) { background-color: rgba(255,255,255,0.1); border-radius: 0.5rem; color: #fff; }
+
+        /* === Fade-in animation === */
+        @keyframes fade-in-up {
+            0%   { opacity: 0; transform: translateY(14px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-up {
+            animation: fade-in-up 0.35s ease-out forwards;
+        }
+        /* Stagger children of a container */
+        .stagger-children > * {
+            opacity: 0;
+            animation: fade-in-up 0.35s ease-out forwards;
+        }
+        .stagger-children > *:nth-child(1) { animation-delay: 0.04s; }
+        .stagger-children > *:nth-child(2) { animation-delay: 0.10s; }
+        .stagger-children > *:nth-child(3) { animation-delay: 0.16s; }
+        .stagger-children > *:nth-child(4) { animation-delay: 0.22s; }
+        .stagger-children > *:nth-child(5) { animation-delay: 0.28s; }
+        .stagger-children > *:nth-child(n+6) { animation-delay: 0.32s; }
+
+        /* === Skeleton loader === */
+        @keyframes shimmer {
+            0%   { background-position: -600px 0; }
+            100% { background-position: 600px 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 1200px 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 6px;
+        }
+
+        /* === Toast notifications === */
+        #toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: all;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 0.6rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            animation: fade-in-up 0.3s ease-out forwards;
+            border: 1px solid rgba(255,255,255,0.1);
+            min-width: 280px;
+            max-width: 380px;
+        }
+        .toast-success { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+        .toast-error   { background: rgba(239, 68, 68, 0.2);  color: #fca5a5; border-color: rgba(239,68,68,0.3);  }
+        .toast-info    { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+        .toast-warn    { background: rgba(245, 158, 11, 0.2); color: #fcd34d; border-color: rgba(245,158,11,0.3); }
+
+        /* === Copy-to-clipboard button === */
+        .copy-btn {
+            cursor: pointer;
+            opacity: 0.35;
+            transition: opacity 0.2s, color 0.2s;
+            font-size: 0.75rem;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .copy-btn:hover { opacity: 1; color: #facc15; }
+        .copy-btn.copied { opacity: 1; color: #4ade80 !important; }
+
+        /* MFA Modal animation */
+        @keyframes bounce-in {
+            0%   { opacity: 0; transform: scale(0.85) translateY(20px); }
+            50%  { opacity: 1; transform: scale(1.03) translateY(-4px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-bounce-in {
+            animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        /* AI Chat Markdown Typography */
+        .ai-message-content p { margin-bottom: 0.5rem; }
+        .ai-message-content p:last-child { margin-bottom: 0; }
+        .ai-message-content strong { color: #facc15; font-weight: 600; }
+        .ai-message-content code { background-color: rgba(0,0,0,0.5); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.7rem; color: #6ee7b7; word-break: break-all; }
+        .ai-message-content pre { background-color: rgba(0,0,0,0.6); padding: 0.5rem; border-radius: 0.5rem; overflow-x: auto; margin-top: 0.5rem; margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.1); }
+        .ai-message-content pre code { background-color: transparent; padding: 0; border-radius: 0; color: #e2e8f0; font-size: 0.65rem; }
+        .ai-message-content ul { list-style-type: disc; margin-left: 1rem; margin-bottom: 0.5rem; }
+        .ai-message-content ol { list-style-type: decimal; margin-left: 1rem; margin-bottom: 0.5rem; }
+        .ai-message-content li { margin-bottom: 0.25rem; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 flex-shrink-0 flex flex-col transition-all duration-300 z-20">
+        <div class="h-16 flex items-center px-6 border-b border-white/10">
+            <h1 class="text-2xl font-bold text-white">KAVACH</h1>
+        </div>
+        
+        <div class="p-4 flex-grow overflow-y-auto">
+            <!-- Domain Sector -->
+            <div class="mb-6">
+                <p class="text-xs font-semibold text-rose-200 uppercase tracking-wider mb-3">Context</p>
+                <select id="domainSelect" class="w-full bg-black/20 border border-white/20 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 block p-2.5 outline-none mb-2 text-white">
+                    <option value="none">All Domains (Dashboard)</option>
+                    <!-- Populated via JS -->
+                </select>
+                <button onclick="loadPage('add_domain')" class="w-full text-sm bg-black/20 hover:bg-black/40 border border-white/20 rounded p-2 text-center transition-colors text-white">
+                    <i class="fas fa-plus mr-1"></i> Add Domain
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <ul class="space-y-1 mt-6" id="navMenu">
+                <li>
+                    <a href="#" onclick="loadPage('home'); return false;" class="nav-link active flex items-center px-3 py-2 text-sm font-medium transition-colors" data-page="home">
+                        <i class="fas fa-home w-6 text-center mr-2"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('discovery'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="discovery">
+                        <i class="fas fa-network-wired w-6 text-center mr-2"></i> Discovery
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('cbom'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="cbom">
+                        <i class="fas fa-cube w-6 text-center mr-2"></i> CBOM
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('posture'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="posture">
+                        <i class="fas fa-shield-alt w-6 text-center mr-2"></i> PQC Posture
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('rating'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="rating">
+                        <i class="fas fa-star w-6 text-center mr-2"></i> Cyber Rating
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="loadPage('reporting'); return false;" class="nav-link flex items-center px-3 py-2 text-sm font-medium text-slate-300 transition-colors" data-page="reporting">
+                        <i class="fas fa-file-pdf w-6 text-center mr-2"></i> Reporting
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- User Footer -->
+        <div class="p-4 border-t border-white/10">
+            <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full bg-yellow-400 flex items-center justify-center text-sm font-bold shadow-lg text-rose-900">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium" id="userNameDisplay">Loading...</p>
+                    <a href="/logout" class="text-xs text-red-400 hover:text-red-300">Sign out</a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main ContentWrapper -->
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-slate-900">
+        <!-- Top Header (Optional, mostly clean space) -->
+        <header class="h-16 flex items-center justify-between px-8 border-b border-yellow-500/30 header-bg z-10 w-full absolute top-0 text-white shadow-md">
+            <h2 id="pageTitle" class="text-xl font-semibold">Overview</h2>
+            <div class="flex items-center space-x-4">
+                <button id="mfaHeaderBtn" onclick="handleMfaButtonClick()" 
+                        class="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-yellow-400/50 text-white hover:text-yellow-300 transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-yellow-500/10 group"
+                        title="Multi-Factor Authentication">
+                    <i class="fas fa-user-shield text-sm group-hover:scale-110 transition-transform"></i>
+                    <span>Enable MFA</span>
+                </button>
+                <span class="text-xs font-bold px-3 py-1.5 rounded-full bg-yellow-400 text-rose-900 shadow-sm border border-yellow-300">PQC-Ready PNB</span>
+            </div>
+        </header>
+
+        <!-- MFA Already Enabled Modal -->
+        <div id="mfaEnabledModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onclick="if(event.target===this) closeMfaModal()">
+            <div class="glass-panel rounded-2xl p-8 max-w-sm w-full mx-4 text-center shadow-2xl border border-green-500/30 animate-bounce-in">
+                <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30 mb-5">
+                    <i class="fas fa-shield-alt text-3xl text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">MFA Already Enabled</h3>
+                <p class="text-slate-400 text-sm mb-6">Your account is protected with Multi-Factor Authentication. Great job keeping your account secure!</p>
+                <div class="flex items-center justify-center gap-2 text-green-400 text-sm font-semibold mb-6">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Two-Factor Authentication Active</span>
+                </div>
+                <button onclick="closeMfaModal()" 
+                        class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-green-500/30 transition-all duration-200">
+                    <i class="fas fa-thumbs-up mr-2"></i>Got it
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Page Content -->
+        <div id="mainContent" class="flex-1 overflow-y-auto p-8 pt-24 scroll-smooth">
+            <!-- Skeleton loader shown while page loads -->
+            <div class="space-y-6">
+                <div class="grid grid-cols-4 gap-4">
+                    <div class="skeleton h-24 rounded-xl"></div>
+                    <div class="skeleton h-24 rounded-xl"></div>
+                    <div class="skeleton h-24 rounded-xl"></div>
+                    <div class="skeleton h-24 rounded-xl"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="skeleton h-56 rounded-xl"></div>
+                    <div class="skeleton h-56 rounded-xl"></div>
+                </div>
+                <div class="skeleton h-40 rounded-xl"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Leaflet.js -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- App JS Scripts -->
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <!-- Floating AI Chat Assistant -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <!-- Chat Button -->
+        <button id="chatToggleBtn" onclick="toggleChat()" 
+                class="h-14 w-14 rounded-full bg-gradient-to-r from-yellow-600 to-yellow-500 text-rose-950 shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 border-2 border-yellow-400 group relative">
+            <i class="fas fa-robot text-2xl group-hover:rotate-12 transition-transform"></i>
+            <span class="absolute -top-1 -right-1 flex h-4 w-4">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-4 w-4 bg-green-500 border border-white/20"></span>
+            </span>
+        </button>
+
+        <!-- Chat Panel -->
+        <div id="chatPanel" class="hidden absolute bottom-20 right-0 w-[380px] h-[550px] glass-panel rounded-2xl flex flex-col shadow-2xl border border-yellow-500/30 overflow-hidden animate-bounce-in origin-bottom-right">
+            <!-- Header -->
+            <div class="p-4 border-b border-white/10 bg-gradient-to-r from-yellow-600 to-yellow-500 text-rose-950 flex items-center justify-between shadow-md">
+                <div class="flex items-center space-x-3">
+                    <div class="h-8 w-8 rounded-full bg-rose-900 flex items-center justify-center text-white border border-yellow-300">
+                        <i class="fas fa-shield-virus"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm">KAVACH AI</h4>
+                        <div class="flex items-center text-[10px] opacity-80">
+                            <span class="h-1.5 w-1.5 rounded-full bg-green-400 mr-1 animate-pulse"></span>
+                            Quantum Security Expert
+                        </div>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="text-rose-900/50 hover:text-rose-900 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth bg-slate-900/50">
+                <!-- Welcome Message -->
+                <div class="flex items-start">
+                    <div class="bg-slate-800 border border-slate-700 rounded-2xl rounded-tl-none p-3 max-w-[85%] shadow-sm">
+                        <p class="text-xs text-slate-200 leading-relaxed">
+                            Hello! I am your <b>KAVACH Security Assistant</b>. I am powered by <b>Phi3.5</b> and have access to NIST standards and your infrastructure data. How can I help you today?
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 border-t border-white/10 bg-slate-800/50">
+                <form id="chatForm" onsubmit="handleChatSubmit(event)" class="relative flex items-center">
+                    <input type="text" id="chatInput" placeholder="Ask about PQC, NIST, or my assets..." 
+                           class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 pr-20 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:bg-black/60 transition-all placeholder-white/20">
+                    <div class="absolute right-2 flex space-x-1">
+                        <button type="button" id="chatStopBtn" onclick="stopAi()" class="h-9 w-9 hidden bg-red-500/80 hover:bg-red-500 text-white rounded-lg flex items-center justify-center transition-all shadow-lg active:scale-90" title="Stop AI">
+                            <i class="fas fa-stop text-sm"></i>
+                        </button>
+                        <button type="submit" id="chatSubmitBtn" class="h-9 w-9 bg-yellow-500 hover:bg-yellow-400 text-rose-900 rounded-lg flex items-center justify-center transition-all shadow-lg active:scale-90" title="Send">
+                            <i class="fas fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-2 text-[10px] text-center text-slate-500 flex items-center justify-center space-x-1">
+                    <i class="fas fa-bolt text-yellow-500 opacity-50"></i>
+                    <span>Powered by local Llama/Phi3.5 RAG</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# KAVACH Enterprise Glossary & Terminology
+
+- **KAVACH:** Centralized cryptographic monitoring and mitigation platform. Protects organizational perimeters from post-quantum decryption threats using continuous discovery and telemetry.
+- **CBOM (Cryptographic Bill of Materials):** A structured, hierarchical inventory of all protocols, algorithms, keys, and certificates present within an organization's digital infrastructure.
+- **SNDL (Store Now, Decrypt Later):** A cyber warfare tactic where adversaries harvest and hoard encrypted HTTPS/TLS traffic today, anticipating the deployment of Cryptographically Relevant Quantum Computers (CRQCs) to decrypt the data retroactively.
+- **PQC Score:** A proprietary heuristic index (0-1000) assigned to an asset. Core algorithms (Key Exchange, Certificate signatures, Cipher block lengths) are mathematically rated against FIPS 203/204/205 standards.
+- **CT Logs (Certificate Transparency):** An open, cryptographic append-only structure used to audit TLS certificates. KAVACH mines CT Logs for autonomous subdomain discovery.
+- **Cryptographic Agility:** The architectural capability to swiftly deprecate and swap cryptographic primitives (e.g., moving from RSA to ML-DSA) without catastrophic systemic downtime.
