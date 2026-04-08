@@ -1,9 +1,0 @@
-Flask==3.0.0
-Werkzeug==3.0.0
-sslyze==6.3.0
-requests==2.31.0
-reportlab==4.0.7
-gunicorn==21.2.0
-geoip2==4.8.0
-pyotp==2.9.0
-qrcode[pil]==7.4.2
