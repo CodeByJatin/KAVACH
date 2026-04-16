@@ -1,0 +1,71 @@
+<div class="flex h-full gap-6">
+    <!-- Domain Sidebar -->
+    <div class="w-72 flex-shrink-0 flex flex-col gap-4">
+        <div class="glass-panel p-4 rounded-xl border border-yellow-500/20">
+            <h3 class="text-xs font-bold uppercase text-slate-500 tracking-widest mb-4">Target Domains</h3>
+            <div id="domainSidebarList" class="space-y-2 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                <!-- JS Populated -->
+                <div class="animate-pulse flex items-center space-x-3 p-3 rounded-lg bg-white/5">
+                    <div class="h-8 w-8 bg-slate-700 rounded-full"></div>
+                    <div class="h-4 bg-slate-700 rounded w-1/2"></div>
+                </div>
+            </div>
+            
+            <button onclick="loadPage('add_domain')" class="w-full mt-4 py-2 px-4 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-rose-950 font-bold rounded-lg shadow-lg hover:shadow-yellow-500/20 transition-all text-sm flex items-center justify-center">
+                <i class="fas fa-plus-circle mr-2"></i> Add New Domain
+            </button>
+        </div>
+        
+        <div class="glass-panel p-4 rounded-xl border border-yellow-500/10 bg-black/20">
+            <h4 class="text-[10px] font-bold uppercase text-slate-600 mb-2">Discovery Status</h4>
+            <div id="discoveryGlobalStatus" class="text-xs text-slate-400 italic">
+                All systems active.
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <!-- Discovery Tabbed Interface -->
+        <div class="mb-4">
+            <!-- Top Tabs (Rounded pills style) -->
+            <div class="flex space-x-2 bg-gradient-to-r from-rose-900 to-rose-800 p-1.5 rounded-full shadow-lg border border-yellow-500/30">
+                <button onclick="switchDiscoveryTab('domains')" id="tabBtn-domains" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-rose-900 bg-yellow-500 shadow-sm transition-all text-center tracking-wide">Domains <span id="countDomains">(0)</span></button>
+                <button onclick="switchDiscoveryTab('ssl')" id="tabBtn-ssl" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-white hover:bg-white/10 transition-all text-center tracking-wide">SSL <span id="countSSL">(0)</span></button>
+                <button onclick="switchDiscoveryTab('ips')" id="tabBtn-ips" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-white hover:bg-white/10 transition-all text-center tracking-wide">IPs <span id="countIPs">(0)</span></button>
+                <button onclick="switchDiscoveryTab('software')" id="tabBtn-software" class="flex-1 py-2 px-4 rounded-full text-sm font-semibold text-white hover:bg-white/10 transition-all text-center tracking-wide">Software <span id="countSoftware">(0)</span></button>
+            </div>
+        </div>
+
+        <div class="mb-6 flex justify-between items-end px-2">
+            <!-- Sub Tabs (Smaller pills) -->
+            <div class="flex space-x-6 border-b border-slate-700/50 flex-1">
+                <button onclick="switchDiscoverySubTab('all')" id="subTabBtn-all" class="text-sm font-medium text-yellow-400 border-b-2 border-yellow-400 pb-2 px-1">All <span id="countAll">(0)</span></button>
+                <button onclick="switchDiscoverySubTab('new')" id="subTabBtn-new" class="text-sm font-medium text-slate-400 hover:text-white pb-2 px-1 border-b-2 border-transparent hover:border-slate-500">New</button>
+                <button onclick="switchDiscoverySubTab('confirmed')" id="subTabBtn-confirmed" class="text-sm font-medium text-slate-400 hover:text-white pb-2 px-1 border-b-2 border-transparent hover:border-slate-500">Confirmed</button>
+            </div>
+            
+            <div id="selectionActions" class="hidden flex items-center space-x-2 pb-1">
+                 <button onclick="scanSelectedDiscovery()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg shadow-lg shadow-blue-500/20 transition-all">
+                    <i class="fas fa-satellite-dish mr-1"></i> Scan Selected
+                 </button>
+            </div>
+        </div>
+
+        <div class="glass-panel rounded-xl border border-yellow-500/20 shadow-[0_8px_30px_rgba(0,0,0,0.5)] overflow-hidden flex-1 flex flex-col">
+            <div class="overflow-x-auto bg-slate-900/90 flex-1">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead id="discoveryTableHeader" class="text-xs uppercase bg-gradient-to-r from-yellow-600 to-yellow-500 text-rose-950 font-bold sticky top-0 z-10">
+                        <!-- JS populated headers -->
+                        <tr>
+                            <th class="px-6 py-4">Loading...</th>
+                        </tr>
+                    </thead>
+                    <tbody id="discoveryTableBody" class="divide-y divide-slate-700/50">
+                        <!-- JS populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

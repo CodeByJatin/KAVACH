@@ -1,0 +1,156 @@
+# KAVACH — Remediation Snippets & Actionable Fix Guide
+# The AI should use these real-world configuration examples when users
+# ask "how do I fix this?" for specific assets or vulnerabilities.
+
+======================================================================
+1. UPGRADE TO TLS 1.3
+======================================================================
+
+[NGINX]
+server {
+    listen 443 ssl http2;
+    ssl_protocols TLSv1.3 TLSv1.2;
+    ssl_prefer_server_ciphers off;
+    # TLS 1.3 ciphers are automatically selected — no ssl_ciphers needed for 1.3
+    # For TLS 1.2 fallback, restrict to strong ciphers only:
+    ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305';
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    # HSTS (force HTTPS for 1 year)
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+}
+
+[APACHE]
+<VirtualHost *:443>
+    SSLEngine on
+    SSLProtocol -all +TLSv1.3 +TLSv1.2
+    SSLCipherSuite TLSv1.3 TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256
+    SSLCipherSuite ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384
+    SSLHonorCipherOrder off
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</VirtualHost>
+
+[IIS (Windows)]
+# Run in PowerShell as Administrator:
+# Disable TLS 1.0 and 1.1
+New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Server' -Force
+Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.0\Server' -Name 'Enabled' -Value 0
+New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Server' -Force
+Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.1\Server' -Name 'Enabled' -Value 0
+# Enable TLS 1.3 (Windows Server 2022+)
+New-Item 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -Force
+Set-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.3\Server' -Name 'Enabled' -Value 1
+
+======================================================================
+2. DISABLE WEAK CIPHER SUITES
+======================================================================
+
+[NGINX]
+# Add to ssl_ciphers — explicitly deny weak ciphers:
+ssl_ciphers 'ECDHE+AESGCM:ECDHE+CHACHA20:!aNULL:!MD5:!DSS:!RC4:!3DES:!DES:!EXPORT:!SEED:!CAMELLIA:!ARIA';
+
+[APACHE]
+SSLCipherSuite HIGH:!aNULL:!MD5:!RC4:!3DES:!DES:!EXPORT:!SEED:!CAMELLIA
+
+[OpenSSL Test — verify weak ciphers are disabled]
+openssl s_client -connect yourdomain.com:443 -cipher RC4 2>&1 | grep "handshake"
+# Expected: "handshake failure" means RC4 is properly disabled
+
+======================================================================
+3. ENABLE FORWARD SECRECY (ECDHE)
+======================================================================
+
+[NGINX]
+ssl_ecdh_curve X25519:secp384r1:secp256r1;
+# Ensure all cipher suites start with ECDHE- prefix
+
+[APACHE]
+SSLOpenSSLConfCmd Curves X25519:secp384r1:secp256r1
+
+[Verification]
+openssl s_client -connect yourdomain.com:443 2>&1 | grep "Server Temp Key"
+# Should show: ECDH, X25519, or P-256/P-384
+
+======================================================================
+4. HYBRID PQC KEY EXCHANGE (QUANTUM-SAFE TLS)
+======================================================================
+
+[NGINX with OpenSSL 3.2+ / OQS Provider]
+# Step 1: Install liboqs and oqs-provider for OpenSSL
+# Step 2: Configure hybrid key exchange
+ssl_ecdh_curve X25519Kyber768Draft00:X25519:secp384r1;
+# This enables hybrid PQC: classical X25519 + quantum-safe Kyber768
+
+[Cloudflare / CDN]
+# If behind Cloudflare: Hybrid PQC (X25519Kyber768) is automatically
+# supported for all TLS 1.3 connections. No server-side config needed.
+# Chrome, Firefox, and Edge already support hybrid key exchange.
+
+[Verification — check if PQC is active]
+# Use Chrome DevTools → Security tab → check "Key Exchange" field
+# Should show: X25519Kyber768Draft00 or similar hybrid
+
+======================================================================
+5. CERTIFICATE UPGRADES
+======================================================================
+
+[Renew with ECDSA instead of RSA — Let's Encrypt]
+# Generate ECDSA private key
+openssl ecparam -genkey -name secp384r1 -out privkey.pem
+# Generate CSR
+openssl req -new -key privkey.pem -out csr.pem -sha384
+# Use certbot with preferred chain
+certbot certonly --csr csr.pem --preferred-chain "ISRG Root X2"
+
+[Check current certificate type]
+openssl s_client -connect yourdomain.com:443 2>&1 | grep "Server public key"
+# RSA 2048 → consider migrating to ECDSA P-384 for efficiency
+# ECDSA P-256 → good, but consider P-384 for higher security margin
+
+======================================================================
+6. SECURITY HEADERS
+======================================================================
+
+[NGINX]
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "DENY" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'" always;
+
+[APACHE]
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "DENY"
+
+======================================================================
+7. QUICK FIXES BY RISK LEVEL
+======================================================================
+
+CRITICAL (Score 0-99):
+  1. Immediately disable SSL 2.0, SSL 3.0, TLS 1.0, TLS 1.1
+  2. Remove RC4, DES, 3DES, NULL, EXPORT ciphers
+  3. Enable TLS 1.2 at minimum, prefer TLS 1.3
+  4. Replace self-signed certificates with CA-issued ones
+
+LEGACY (Score 100-399):
+  1. Upgrade to TLS 1.3
+  2. Switch to ECDHE-based key exchange for forward secrecy
+  3. Migrate from RSA-2048 to ECDSA P-384 certificates
+  4. Enable HSTS header
+
+STANDARD (Score 400-599):
+  1. Enable hybrid PQC key exchange (X25519Kyber768)
+  2. Remove any remaining TLS 1.2 CBC-mode ciphers
+  3. Add comprehensive security headers
+
+STRONG (Score 600-799):
+  1. Deploy full PQC hybrid on all endpoints
+  2. Plan ML-DSA certificate migration
+  3. Implement certificate pinning where applicable
+
+ELITE (Score 800-1000):
+  Maintain current posture. Monitor NIST updates for algorithm changes.
+  Consider contributing to PQC migration best practices.

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP - KAVACH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #a31c3b 0%, #d97706 70%, #fef08a 100%);
+        }
+        .heading-font { font-family: 'Outfit', sans-serif; }
+        .bg-pattern {
+            position: absolute; inset: 0; opacity: 0.15;
+            background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0);
+            background-size: 32px 32px; pointer-events: none;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        @keyframes fade-in-up {
+            0%   { opacity: 0; transform: translateY(14px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fade-in-up 0.4s ease-out forwards; }
+
+        /* OTP Input styling */
+        .otp-input {
+            letter-spacing: 1.2rem;
+            font-size: 2rem;
+            text-align: center;
+            font-family: 'Inter', monospace;
+            font-weight: 700;
+        }
+        .otp-input::placeholder {
+            letter-spacing: 0.8rem;
+            font-size: 1.5rem;
+        }
+
+        @keyframes pulse-ring {
+            0%   { box-shadow: 0 0 0 0 rgba(234,179,8,0.5); }
+            70%  { box-shadow: 0 0 0 15px rgba(234,179,8,0); }
+            100% { box-shadow: 0 0 0 0 rgba(234,179,8,0); }
+        }
+        .pulse-ring { animation: pulse-ring 2s infinite; }
+    </style>
+</head>
+<body class="text-white min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div class="bg-pattern"></div>
+
+    <div class="glass-card p-10 rounded-2xl w-full max-w-md relative z-10 fade-in">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 shadow-lg mb-5 pulse-ring">
+                <i class="fas fa-fingerprint text-3xl text-rose-900"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white">Two-Factor Verification</h2>
+            <p class="text-slate-300 text-sm mt-2">Enter the 6-digit code from your Authenticator app</p>
+        </div>
+
+        {% if error %}
+        <div class="bg-red-500/20 border border-red-500/40 text-red-300 px-4 py-3 rounded-lg mb-6 text-sm text-center font-medium">
+            <i class="fas fa-exclamation-circle mr-1"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/verify-otp" class="space-y-6">
+            <div>
+                <label class="block text-xs font-semibold text-rose-200 uppercase tracking-widest mb-3 text-center">Authentication Code</label>
+                <input type="text" name="otp" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" required autofocus
+                    class="otp-input w-full bg-white/10 border border-white/20 rounded-xl px-4 py-4 text-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-white/20 transition-all placeholder-white/20"
+                    placeholder="••••••">
+            </div>
+
+            <button type="submit" 
+                    class="w-full bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-rose-900 font-bold py-3.5 px-4 rounded-lg shadow-[0_0_15px_rgba(234,179,8,0.4)] hover:shadow-[0_0_25px_rgba(234,179,8,0.6)] hover:-translate-y-0.5 transition-all duration-200 text-lg uppercase tracking-wide">
+                <i class="fas fa-lock-open mr-2"></i> Verify & Sign In
+            </button>
+        </form>
+
+        <div class="text-center mt-6 space-y-2">
+            <p class="text-xs text-white/40">Code expires every 30 seconds</p>
+            <a href="/login" class="text-xs text-white/60 hover:text-white transition-colors border-b border-white/30 pb-0.5">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Login
+            </a>
+        </div>
+    </div>
+</body>
+</html>

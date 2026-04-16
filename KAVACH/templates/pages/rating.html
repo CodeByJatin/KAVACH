@@ -1,0 +1,36 @@
+<!-- Rating Partial -->
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div>
+        <h2 class="text-2xl font-semibold mb-2">Cyber Security Rating</h2>
+        <p class="text-slate-400 text-sm">Overall cryptographic scoring out of 1000 aggregated across all analyzed assets for the selected perimeter.</p>
+    </div>
+    <div class="mt-4 md:mt-0">
+        <button onclick="downloadAttestation()" class="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-rose-950 font-bold rounded-lg shadow-[0_0_15px_rgba(234,179,8,0.3)] transition-all flex items-center border border-yellow-400">
+            <i class="fas fa-certificate mr-2 text-lg"></i> Official Attestation
+        </button>
+    </div>
+</div>
+
+<div class="glass-panel p-10 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.5)] w-full max-w-4xl mx-auto flex flex-col items-center justify-center text-center mt-12 border border-yellow-500/20 relative overflow-hidden">
+    <!-- Glow effect -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-[128px] opacity-20 pointer-events-none" id="ratingGlow"></div>
+    
+    <div class="text-sm font-semibold text-yellow-500 uppercase tracking-[0.2em] mb-4">Enterprise Score</div>
+    
+    <div class="relative w-64 h-64 flex items-center justify-center">
+        <!-- SVG Ring -->
+        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle class="text-slate-800" stroke-width="8" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+            <circle id="ratingRing" class="text-blue-500 transition-all duration-1000 ease-out" stroke-width="8" stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+            <span class="text-6xl font-bold text-white tracking-tighter" id="ratingScore">0</span>
+            <span class="text-sm text-slate-500 mt-1">/ 1000</span>
+        </div>
+    </div>
+    
+    <h3 class="text-3xl font-bold mt-8" id="ratingLabel">Analyzing...</h3>
+    <p class="text-slate-400 mt-4 max-w-2xl leading-relaxed" id="ratingDesc">
+        Rating is calculated by evaluating TLS Protocol versions, Cipher Suites, Key exchange mechanisms, and adherence to ML-KEM migration guidelines.
+    </p>
+</div>

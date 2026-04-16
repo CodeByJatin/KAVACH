@@ -1,0 +1,120 @@
+# NIST Post-Quantum Cryptography (PQC) Standards — KAVACH Reference Guide
+# Last Updated: 2024-Q4 | Source: NIST SP 800-208, FIPS 203/204/205, CNSA 2.0
+
+======================================================================
+1. APPROVED PQC ALGORITHMS
+======================================================================
+
+[KEY ENCAPSULATION — replacing RSA/ECDH key exchange]
+• ML-KEM (FIPS 203) — Module-Lattice-Based Key-Encapsulation Mechanism
+  - Previously known as CRYSTALS-Kyber
+  - Variants: ML-KEM-512 (128-bit), ML-KEM-768 (192-bit), ML-KEM-1024 (256-bit)
+  - Use case: TLS 1.3 key exchange, VPN tunnels, secure messaging
+  - Status: FINAL STANDARD (Aug 2024)
+  - Recommended minimum: ML-KEM-768 for general use, ML-KEM-1024 for classified
+
+[DIGITAL SIGNATURES — replacing RSA/ECDSA signatures]
+• ML-DSA (FIPS 204) — Module-Lattice-Based Digital Signature Algorithm
+  - Previously known as CRYSTALS-Dilithium
+  - Variants: ML-DSA-44 (128-bit), ML-DSA-65 (192-bit), ML-DSA-87 (256-bit)
+  - Use case: Code signing, certificate signing, document authentication
+  - Status: FINAL STANDARD (Aug 2024)
+
+• SLH-DSA (FIPS 205) — Stateless Hash-Based Digital Signature Algorithm
+  - Previously known as SPHINCS+
+  - Use case: Backup/fallback signature scheme, ultra-long-term security
+  - Tradeoff: Larger signatures (~17KB-49KB) but relies on hash security only
+  - Status: FINAL STANDARD (Aug 2024)
+
+======================================================================
+2. CLASSICAL ALGORITHMS — QUANTUM VULNERABILITY STATUS
+======================================================================
+
+CRITICALLY VULNERABLE (Shor's Algorithm):
+• RSA — ALL key sizes (1024/2048/4096) are broken by quantum computers
+• ECDSA / ECDH — ALL curves (P-256, P-384, P-521) are broken
+• Diffie-Hellman (DH/DHE) — Finite-field key exchange is broken
+• DSA — Broken by quantum factoring
+• EdDSA (Ed25519/Ed448) — Broken (discrete log on elliptic curves)
+
+STILL SAFE (Grover's Algorithm — halves effective key strength):
+• AES-256 → remains 128-bit effective strength. SAFE.
+• AES-192 → remains 96-bit effective strength. SAFE.
+• AES-128 → drops to 64-bit effective. NOT RECOMMENDED for long-term secrets.
+• SHA-256 → remains safe for hashing.
+• SHA-384/512 → remains safe for hashing and HMACs.
+• ChaCha20-Poly1305 → symmetric, remains safe.
+
+======================================================================
+3. TLS VERSION SECURITY ASSESSMENT
+======================================================================
+
+• TLS 1.3 — GOOD. Supports modern cipher suites, forward secrecy mandatory.
+  Score: High (base +300 pts in KAVACH scoring)
+• TLS 1.2 — ACCEPTABLE but aging. Many legacy ciphers permitted.
+  Score: Medium (base +150 pts)
+• TLS 1.1 — DEPRECATED since March 2021 (RFC 8996). Insecure.
+  Score: Critical (base +50 pts)
+• TLS 1.0 — DEPRECATED. Known vulnerabilities (BEAST, POODLE).
+  Score: Critical (base +25 pts)
+• SSL 3.0 / SSL 2.0 — DEAD. Must never be used.
+  Score: 0 pts
+
+======================================================================
+4. CIPHER SUITE QUALITY TIERS
+======================================================================
+
+ELITE (PQC-Ready / Hybrid):
+• TLS_AES_256_GCM_SHA384 (TLS 1.3)
+• TLS_CHACHA20_POLY1305_SHA256 (TLS 1.3)
+• X25519Kyber768Draft00 (Hybrid PQC key exchange)
+
+STRONG (Modern Classical):
+• ECDHE-ECDSA-AES256-GCM-SHA384
+• ECDHE-RSA-AES256-GCM-SHA384
+• ECDHE-ECDSA-CHACHA20-POLY1305
+
+WEAK (Legacy — should migrate):
+• DHE-RSA-AES128-SHA
+• ECDHE-RSA-AES128-SHA
+• Any cipher using CBC mode (vulnerable to padding oracle attacks)
+
+CRITICAL (Must disable immediately):
+• RC4, DES, 3DES, MD5-based MACs, NULL ciphers, EXPORT ciphers
+
+======================================================================
+5. KEY LENGTH ASSESSMENT
+======================================================================
+
+• RSA 4096-bit → Classical strong, but quantum-vulnerable. Score: Medium.
+• RSA 2048-bit → Minimum classical standard, quantum-vulnerable. Score: Low.
+• RSA 1024-bit → Broken even classically. Score: Critical.
+• EC P-256 (256-bit) → Classical strong, quantum-vulnerable. Score: Medium.
+• EC P-384 (384-bit) → Classical strong, quantum-vulnerable. Score: Medium.
+• Ed25519 (256-bit) → Modern curves, quantum-vulnerable. Score: Medium.
+
+======================================================================
+6. MIGRATION TIMELINE (CNSA 2.0 / NSA Guidance)
+======================================================================
+
+By 2025: Begin hybrid TLS deployment (classical + PQC).
+By 2027: All new systems MUST support ML-KEM and ML-DSA.
+By 2030: Exclusive use of PQC algorithms for national security systems.
+By 2035: Complete deprecation of all RSA and ECC across federal infrastructure.
+
+======================================================================
+7. KAVACH PQC SCORING MODEL (0-1000)
+======================================================================
+
+The KAVACH score is calculated from four components:
+• TLS Protocol (0-300): Based on highest TLS version supported
+• Cipher Suite (0-300): Based on cipher strength and forward secrecy
+• Key Exchange (0-200): Based on key type, length, and PQC readiness
+• PQC Compliance (0-200): Bonus for hybrid/PQC algorithms detected
+
+Score Bands:
+• 800-1000: ELITE — PQC-ready, exceeds all current standards
+• 600-799:  STRONG — Modern cryptography, migration recommended
+• 400-599:  STANDARD — Meets minimum baselines, upgrades needed
+• 100-399:  LEGACY — Outdated crypto, high quantum risk
+• 0-99:     CRITICAL — Immediate action required
